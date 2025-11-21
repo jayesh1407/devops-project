@@ -16,7 +16,10 @@ This project is a simple "To-Do List" web application built with Python (Flask).
 
 ## ✨ New Features
 - **Premium UI**: Modern interface with priority badges and due dates.
-- **CI/CD Dashboard**: Real-time visualization of your GitHub Actions pipeline status directly within the app.
+- **CI/CD Dashboard**: Real-time visualization of your GitHub Actions pipeline status.
+- **Task Editing**: Fix typos or update priorities easily.
+- **Filtering**: View tasks by Status (Active/Completed) or Priority.
+- **Robustness**: Flash messages for feedback and "Clear Completed" to keep things tidy.
 
 ---
 

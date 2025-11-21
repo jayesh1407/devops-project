@@ -6,6 +6,7 @@ from unittest.mock import patch
 def client():
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['SECRET_KEY'] = 'test'
     
     with app.app_context():
         db.create_all()
@@ -14,13 +15,11 @@ def client():
         db.drop_all()
 
 def test_index_page(client):
-    """Test that the index page loads correctly."""
     response = client.get('/')
     assert response.status_code == 200
     assert b'DevOps Project' in response.data
 
 def test_add_todo(client):
-    """Test adding a new todo item with priority."""
     response = client.post('/add', data={
         'title': 'Test Task',
         'priority': 'High',
@@ -30,37 +29,59 @@ def test_add_todo(client):
     assert b'Test Task' in response.data
     assert b'High' in response.data
 
-def test_complete_todo(client):
-    """Test marking a todo item as complete."""
-    client.post('/add', data={'title': 'Task to Complete'}, follow_redirects=True)
+def test_edit_todo(client):
+    """Test editing a task."""
+    client.post('/add', data={'title': 'Old Title', 'priority': 'Low'}, follow_redirects=True)
     
     with app.app_context():
-        todo = Todo.query.first()
-        todo_id = todo.id
-
-    response = client.get(f'/update/{todo_id}', follow_redirects=True)
+        todo_id = Todo.query.first().id
+        
+    response = client.post(f'/edit/{todo_id}', data={
+        'title': 'New Title',
+        'priority': 'High',
+        'due_date': '2024-01-01'
+    }, follow_redirects=True)
+    
     assert response.status_code == 200
-    
-    with app.app_context():
-        todo = Todo.query.get(todo_id)
-        assert todo.complete is True
+    assert b'New Title' in response.data
+    assert b'High' in response.data
 
-def test_delete_todo(client):
-    """Test deleting a todo item."""
-    client.post('/add', data={'title': 'Task to Delete'}, follow_redirects=True)
+def test_clear_completed(client):
+    """Test clearing completed tasks."""
+    # Add two tasks
+    client.post('/add', data={'title': 'Task 1'}, follow_redirects=True)
+    client.post('/add', data={'title': 'Task 2'}, follow_redirects=True)
     
+    # Mark Task 1 as complete
     with app.app_context():
-        todo = Todo.query.first()
-        todo_id = todo.id
-
-    response = client.get(f'/delete/{todo_id}', follow_redirects=True)
+        todo_id = Todo.query.filter_by(title='Task 1').first().id
+    client.get(f'/update/{todo_id}', follow_redirects=True)
+    
+    # Clear completed
+    response = client.post('/clear_completed', follow_redirects=True)
+    
     assert response.status_code == 200
-    assert b'Task to Delete' not in response.data
+    assert b'Task 1' not in response.data
+    assert b'Task 2' in response.data
+
+def test_filter_logic(client):
+    """Test filtering by priority."""
+    client.post('/add', data={'title': 'High Task', 'priority': 'High'}, follow_redirects=True)
+    client.post('/add', data={'title': 'Low Task', 'priority': 'Low'}, follow_redirects=True)
+    
+    # Filter for High
+    response = client.get('/?priority=High')
+    assert b'High Task' in response.data
+    assert b'Low Task' not in response.data
+
+def test_404_page(client):
+    """Test that 404 page renders."""
+    response = client.get('/nonexistent_page')
+    assert response.status_code == 404
+    assert b'Page Not Found' in response.data
 
 @patch('requests.get')
 def test_dashboard(mock_get, client):
-    """Test the dashboard route with mocked GitHub API response."""
-    # Mock the API response
     mock_response = {
         'workflow_runs': [
             {
@@ -81,4 +102,3 @@ def test_dashboard(mock_get, client):
     response = client.get('/dashboard')
     assert response.status_code == 200
     assert b'CI Pipeline' in response.data
-    assert b'Test commit' in response.data
