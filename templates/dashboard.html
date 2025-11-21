@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .nav-link.active {
+            color: white !important;
+            font-weight: bold;
+            border-bottom: 2px solid white;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin-top: 30px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+            border-radius: 15px 15px 0 0 !important;
+        }
+
+        .status-success {
+            color: #2ecc71;
+        }
+
+        .status-failure {
+            color: #e74c3c;
+        }
+
+        .status-pending {
+            color: #f1c40f;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-code-branch me-2"></i>DevOps Project</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-tasks me-1"></i> My Tasks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard"><i class="fas fa-tachometer-alt me-1"></i> CI/CD
+                            Dashboard</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fab fa-github me-2"></i>Pipeline Status</h4>
+                <small class="text-muted">Repository: {{ repo }}</small>
+            </div>
+            <div class="card-body">
+                {% if runs %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Status</th>
+                                <th>Workflow</th>
+                                <th>Commit</th>
+                                <th>Branch</th>
+                                <th>Time</th>
+                                <th>Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in runs %}
+                            <tr>
+                                <td>
+                                    {% if run.conclusion == 'success' %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> Success</span>
+                                    {% elif run.conclusion == 'failure' %}
+                                    <span class="badge bg-danger"><i class="fas fa-times"></i> Failed</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-spinner fa-spin"></i> {{
+                                        run.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">{{ run.name }}</td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;">
+                                        {{ run.head_commit.message }}
+                                    </div>
+                                    <small class="text-muted">{{ run.head_sha[:7] }}</small>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ run.head_branch }}</span></td>
+                                <td class="small text-muted">{{ run.created_at[:10] }} {{ run.created_at[11:16] }}</td>
+                                <td>
+                                    <a href="{{ run.html_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fab fa-github fa-4x mb-3 text-muted"></i>
+                    <h5>No Pipeline Data Found</h5>
+                    <p class="text-muted">
+                        Make sure your repository is public or you have configured the token.<br>
+                        Currently checking: <strong>{{ repo }}</strong>
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
