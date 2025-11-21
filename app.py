@@ -59,8 +59,8 @@ def delete(todo_id):
 def dashboard():
     # HARDCODED FOR DEMO: Replace with your actual repo details
     # If rate limited, you might need a token: headers={'Authorization': 'token YOUR_TOKEN'}
-    GITHUB_USER = "jayeshjena" # Placeholder, user needs to update this
-    GITHUB_REPO = "devops-demo-project" # Placeholder
+    GITHUB_USER = "jayesh1407" 
+    GITHUB_REPO = "devops-project"
     
     api_url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/actions/runs"
     
